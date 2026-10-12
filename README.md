@@ -1,4 +1,3 @@
-markdown
 # homelab-monitoring
 
 Observability stack on Proxmox homelab.
