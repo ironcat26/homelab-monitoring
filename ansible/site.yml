@@ -1,18 +1,6 @@
+---
 - name: Base setup for all hosts
   hosts: all
   become: true
-  tasks:
-    - name: Update apt cache
-      apt:
-        update_cache: yes
-        cache_valid_time: 3600
-
-    - name: Install base packages
-      apt:
-        name:
-          - curl
-          - vim
-          - htop
-          - git
-          - net-tools
-        state: present
+  roles:
+    - node_exporter
