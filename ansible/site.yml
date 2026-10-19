@@ -4,3 +4,9 @@
   become: true
   roles:
     - node_exporter
+
+- name: Monitoring stack on monitor
+  hosts: monitor
+  become: true
+  roles:
+    - prometheus
