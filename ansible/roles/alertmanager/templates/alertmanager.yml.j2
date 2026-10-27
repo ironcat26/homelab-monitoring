@@ -1,12 +1,23 @@
 global:
   resolve_timeout: 5m
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'monitoringnod@gmail.com'
+  smtp_auth_username: 'monitoringnod@gmail.com'
+  smtp_auth_password: 'lexgxexzfkvjlmdi'
+  smtp_require_tls: true
 
 route:
-  group_by: ['alertname']
+  group_by: ['alertname', 'instance']
   group_wait: 10s
-  group_interval: 10s
+  group_interval: 5m
   repeat_interval: 1h
-  receiver: 'default'
+  receiver: 'email-notifications'
 
 receivers:
-  - name: 'default'
+  - name: 'email-notifications'
+    email_configs:
+      - to: 'monitoringnod@gmail.com'
+        send_resolved: true
+        headers:
+          Subject: 'Alertmanager Notification'
+
