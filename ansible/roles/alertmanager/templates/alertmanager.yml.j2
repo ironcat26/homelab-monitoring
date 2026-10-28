@@ -21,3 +21,9 @@ receivers:
         headers:
           Subject: 'Alertmanager Notification'
 
+inhibit_rules:
+  - source_match:
+      alertname: 'NodeDown'
+    target_match_re:
+      alertname: 'HighCPU|HighMemoryUsage|HighDiskUsage|DiskWillFillIn4Hours'
+    equal: ['instance']
