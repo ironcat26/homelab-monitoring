@@ -1,0 +1,87 @@
+---
+- name: Install dependencies
+  apt:
+    name:
+      - wget
+      - gpg
+      - tar
+    state: present
+
+- name: Download Grafana tarball
+  get_url:
+    url: "https://dl.grafana.com/oss/release/grafana-11.1.0.linux-amd64.tar.gz"
+    dest: "/tmp/grafana.tar.gz"
+    mode: '0644'
+
+- name: Create Grafana user
+  user:
+    name: grafana
+    shell: /bin/false
+    system: yes
+    create_home: no
+
+- name: Extract Grafana
+  unarchive:
+    src: "/tmp/grafana.tar.gz"
+    dest: "/usr/local/"
+    remote_src: yes
+
+- name: Move Grafana to /usr/local/grafana
+  shell: |
+    mv /usr/local/grafana-v11.1.0 /usr/local/grafana
+  args:
+    creates: /usr/local/grafana
+
+- name: Change owner of Grafana directory
+  file:
+    path: /usr/local/grafana
+    state: directory
+    owner: grafana
+    group: users
+    recurse: yes
+
+- name: Create systemd unit file for Grafana
+  copy:
+    dest: /etc/systemd/system/grafana-server.service
+    content: |
+      [Unit]
+      Description=Grafana Server
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=grafana
+      Group=users
+      ExecStart=/usr/local/grafana/bin/grafana server --config=/usr/local/grafana/conf/grafana.ini --homepath=/usr/local/grafana
+      Restart=on-failure
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Enable and start Grafana
+  systemd:
+    name: grafana-server
+    enabled: yes
+    state: started
+    daemon_reload: yes
+
+
+- name: Create provisioning directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: grafana
+    group: users
+    mode: '0755'
+  loop:
+    - /usr/local/grafana/conf/provisioning
+    - /usr/local/grafana/conf/provisioning/datasources
+
+- name: Copy Prometheus datasource config
+  copy:
+    src: "{{ playbook_dir }}/../monitoring/grafana/provisioning/datasources/prometheus.yml"
+    dest: /usr/local/grafana/conf/provisioning/datasources/prometheus.yml
+    owner: grafana
+    group: users
+    mode: '0644'
+  notify: Restart grafana
